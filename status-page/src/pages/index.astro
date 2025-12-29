@@ -1,0 +1,535 @@
+---
+// Fetch uptime data from Upptime API files
+const REPO_URL = 'https://raw.githubusercontent.com/BinHexer/lerncampus24-status/master';
+
+interface UptimeData {
+  name: string;
+  slug: string;
+  status: 'up' | 'down' | 'degraded';
+  uptime: string;
+  uptimeDay: string;
+  uptimeWeek: string;
+  uptimeMonth: string;
+  uptimeYear: string;
+  time: number;
+  timeDay: number;
+  timeWeek: number;
+  timeMonth: number;
+  timeYear: number;
+  dailyMinutesDown: Record<string, number>;
+}
+
+const services = [
+  { name: 'API', slug: 'api' },
+  { name: 'Web App', slug: 'web-app' },
+  { name: 'Webseite', slug: 'webseite' },
+];
+
+let uptimeData: UptimeData[] = [];
+let overallStatus: 'operational' | 'degraded' | 'down' = 'operational';
+
+try {
+  uptimeData = await Promise.all(
+    services.map(async (service) => {
+      try {
+        const res = await fetch(`${REPO_URL}/api/${service.slug}/uptime.json`);
+        if (!res.ok) throw new Error('Not found');
+        return await res.json();
+      } catch {
+        // Return mock data if API not available yet
+        return {
+          name: service.name,
+          slug: service.slug,
+          status: 'up',
+          uptime: '100',
+          uptimeDay: '100',
+          uptimeWeek: '100',
+          uptimeMonth: '100',
+          uptimeYear: '100',
+          time: 0,
+          timeDay: 0,
+          timeWeek: 0,
+          timeMonth: 0,
+          timeYear: 0,
+          dailyMinutesDown: {},
+        };
+      }
+    })
+  );
+
+  // Determine overall status
+  if (uptimeData.some(s => s.status === 'down')) {
+    overallStatus = 'down';
+  } else if (uptimeData.some(s => s.status === 'degraded')) {
+    overallStatus = 'degraded';
+  }
+} catch (e) {
+  console.error('Failed to fetch uptime data:', e);
+}
+
+// Generate 90 days of uptime bars
+function generateUptimeBars(dailyMinutesDown: Record<string, number> = {}) {
+  const days = [];
+  const now = new Date();
+
+  for (let i = 89; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    const dateStr = date.toISOString().split('T')[0];
+    const minutesDown = dailyMinutesDown[dateStr] || 0;
+
+    let status = 'up';
+    if (minutesDown > 0 && minutesDown < 30) {
+      status = 'degraded';
+    } else if (minutesDown >= 30) {
+      status = 'down';
+    }
+
+    days.push({
+      date: dateStr,
+      status,
+      minutesDown,
+    });
+  }
+
+  return days;
+}
+
+// Format date range for header
+const now = new Date();
+const threeMonthsAgo = new Date(now);
+threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+const formatMonth = (date: Date) => {
+  return date.toLocaleDateString('de-DE', { month: 'short', year: 'numeric' });
+};
+
+const dateRange = `${formatMonth(threeMonthsAgo)} - ${formatMonth(now)}`;
+---
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LernCampus24 Status</title>
+  <meta name="description" content="Echtzeit-Status aller LernCampus24 Dienste">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --green: #22c55e;
+      --green-light: #dcfce7;
+      --green-bg: #f0fdf4;
+      --yellow: #eab308;
+      --yellow-light: #fef9c3;
+      --yellow-bg: #fefce8;
+      --red: #ef4444;
+      --red-light: #fee2e2;
+      --red-bg: #fef2f2;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-800);
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--gray-900);
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--green);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+
+    .btn-outline {
+      border: 1px solid var(--gray-300);
+      background: white;
+      color: var(--gray-700);
+    }
+
+    .btn-outline:hover {
+      background: var(--gray-50);
+      border-color: var(--gray-400);
+    }
+
+    .btn-primary {
+      background: var(--gray-900);
+      color: white;
+      border: 1px solid var(--gray-900);
+    }
+
+    .btn-primary:hover {
+      background: var(--gray-700);
+    }
+
+    /* Status Banner */
+    .status-banner {
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+    }
+
+    .status-banner.operational {
+      background: var(--green-bg);
+      border: 1px solid var(--green-light);
+    }
+
+    .status-banner.degraded {
+      background: var(--yellow-bg);
+      border: 1px solid var(--yellow-light);
+    }
+
+    .status-banner.down {
+      background: var(--red-bg);
+      border: 1px solid var(--red-light);
+    }
+
+    .status-banner-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .status-icon {
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+
+    .status-text h2 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .status-banner.operational .status-text h2 { color: #166534; }
+    .status-banner.degraded .status-text h2 { color: #854d0e; }
+    .status-banner.down .status-text h2 { color: #991b1b; }
+
+    .status-text p {
+      font-size: 0.875rem;
+      color: var(--gray-600);
+    }
+
+    /* Services Section */
+    .services-section {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--gray-200);
+      overflow: hidden;
+    }
+
+    .services-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .services-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--gray-900);
+    }
+
+    .date-range {
+      font-size: 0.875rem;
+      color: var(--gray-500);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .date-nav {
+      background: none;
+      border: none;
+      color: var(--gray-400);
+      cursor: pointer;
+      padding: 0.25rem;
+    }
+
+    .date-nav:hover {
+      color: var(--gray-600);
+    }
+
+    /* Service Card */
+    .service-card {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--gray-100);
+    }
+
+    .service-card:last-child {
+      border-bottom: none;
+    }
+
+    .service-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .service-status-icon {
+      font-size: 1rem;
+      margin-right: 0.75rem;
+    }
+
+    .service-name {
+      font-weight: 500;
+      color: var(--gray-900);
+      flex: 1;
+    }
+
+    .service-uptime {
+      font-size: 0.875rem;
+      color: var(--gray-500);
+    }
+
+    /* Uptime Bar */
+    .uptime-bar {
+      display: flex;
+      gap: 2px;
+      height: 32px;
+    }
+
+    .bar-segment {
+      flex: 1;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: transform 0.1s;
+      position: relative;
+    }
+
+    .bar-segment:hover {
+      transform: scaleY(1.1);
+    }
+
+    .bar-segment.up {
+      background: var(--green);
+    }
+
+    .bar-segment.degraded {
+      background: var(--yellow);
+    }
+
+    .bar-segment.down {
+      background: var(--red);
+    }
+
+    .bar-segment.no-data {
+      background: var(--gray-200);
+    }
+
+    /* Tooltip */
+    .bar-segment:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--gray-900);
+      color: white;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      z-index: 10;
+      margin-bottom: 8px;
+    }
+
+    .bar-segment:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: var(--gray-900);
+      margin-bottom: -4px;
+      z-index: 10;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--gray-200);
+    }
+
+    .footer-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--gray-500);
+      text-decoration: none;
+      font-size: 0.875rem;
+    }
+
+    .footer-link:hover {
+      color: var(--gray-700);
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+      }
+
+      .uptime-bar {
+        height: 24px;
+      }
+
+      .bar-segment {
+        border-radius: 2px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <a href="https://lerncampus24.de" class="logo">
+        <div class="logo-icon">L</div>
+        LernCampus24
+      </a>
+      <div class="header-actions">
+        <a href="mailto:support@lerncampus24.de" class="btn btn-outline">Störung melden</a>
+        <a href="#" class="btn btn-primary">Updates abonnieren</a>
+      </div>
+    </header>
+
+    <!-- Status Banner -->
+    <div class={`status-banner ${overallStatus}`}>
+      <div class="status-banner-content">
+        <span class="status-icon">
+          {overallStatus === 'operational' && '✅'}
+          {overallStatus === 'degraded' && '⚠️'}
+          {overallStatus === 'down' && '🔴'}
+        </span>
+        <div class="status-text">
+          <h2>
+            {overallStatus === 'operational' && 'Alle Systeme funktionieren einwandfrei'}
+            {overallStatus === 'degraded' && 'Eingeschränkte Leistung bei einigen Diensten'}
+            {overallStatus === 'down' && 'Störung bei einem oder mehreren Diensten'}
+          </h2>
+          <p>
+            {overallStatus === 'operational' && 'Wir haben keine bekannten Störungen.'}
+            {overallStatus === 'degraded' && 'Wir arbeiten an der Behebung.'}
+            {overallStatus === 'down' && 'Wir arbeiten mit Hochdruck an einer Lösung.'}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Services Section -->
+    <section class="services-section">
+      <div class="services-header">
+        <h3 class="services-title">Systemstatus</h3>
+        <div class="date-range">
+          <button class="date-nav" aria-label="Vorheriger Zeitraum">‹</button>
+          <span>{dateRange}</span>
+          <button class="date-nav" aria-label="Nächster Zeitraum">›</button>
+        </div>
+      </div>
+
+      {uptimeData.map((service) => {
+        const bars = generateUptimeBars(service.dailyMinutesDown);
+        const uptimePercent = parseFloat(service.uptimeMonth || service.uptime || '100').toFixed(2);
+
+        return (
+          <div class="service-card">
+            <div class="service-header">
+              <span class="service-status-icon">
+                {service.status === 'up' && '✅'}
+                {service.status === 'degraded' && '⚠️'}
+                {service.status === 'down' && '🔴'}
+              </span>
+              <span class="service-name">{service.name}</span>
+              <span class="service-uptime">{uptimePercent}% uptime</span>
+            </div>
+            <div class="uptime-bar">
+              {bars.map((day) => (
+                <div
+                  class={`bar-segment ${day.status}`}
+                  data-tooltip={`${new Date(day.date).toLocaleDateString('de-DE', { day: '2-digit', month: 'short' })}: ${day.minutesDown === 0 ? 'Keine Ausfälle' : `${day.minutesDown} Min. Ausfall`}`}
+                />
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <a href="https://lerncampus24.de" class="footer-link">
+        <span>Powered by</span>
+        <strong>LernCampus24</strong>
+      </a>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,36 +1,43 @@
-# Modified for Cloudflare Pages deployment
-# Note: This file is customized - template updates are disabled
+# Custom Status Page - Cloudflare Pages deployment
+# Builds custom Astro status page with incident.io-inspired design
 
 name: Static Site CI
 on:
   schedule:
-    - cron: "0 1 * * *"
+    - cron: "0 * * * *"  # Every hour (status page rebuild)
   repository_dispatch:
     types: [static_site]
   workflow_dispatch:
+  push:
+    paths:
+      - 'status-page/**'
+      - 'api/**'
+      - 'history/**'
 
 jobs:
-  release:
+  build:
     name: Build and deploy site
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
-          token: ${{ secrets.GH_PAT || github.token }}
 
-      - name: Generate site
-        uses: upptime/uptime-monitor@v1.41.0
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          command: "site"
-        env:
-          GH_PAT: ${{ secrets.GH_PAT || github.token }}
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: status-page
+        run: npm install
+
+      - name: Build Astro site
+        working-directory: status-page
+        run: npm run build
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy site/status-page/__sapper__/export --project-name=lerncampus24-status
+          command: pages deploy status-page/dist --project-name=lerncampus24-status
