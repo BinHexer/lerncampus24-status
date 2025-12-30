@@ -115,10 +115,6 @@ const dateRange = `${formatMonth(threeMonthsAgo)} - ${formatMonth(now)}`;
   <title>LernCampus24 Status</title>
   <meta name="description" content="Echtzeit-Status aller LernCampus24 Dienste">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <!-- Inter Font -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -149,20 +145,16 @@ const dateRange = `${formatMonth(threeMonthsAgo)} - ${formatMonth(now)}`;
     }
 
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: white;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--gray-50);
       color: var(--gray-800);
       line-height: 1.5;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
     }
 
     .container {
-      max-width: 718px;
+      max-width: 800px;
       margin: 0 auto;
       padding: 2rem 1rem;
-      flex: 1;
     }
 
     /* Header */
@@ -177,23 +169,27 @@ const dateRange = `${formatMonth(threeMonthsAgo)} - ${formatMonth(now)}`;
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      font-size: 1.125rem;
+      font-size: 1.25rem;
       font-weight: 600;
       color: var(--gray-900);
       text-decoration: none;
     }
 
     .logo-icon {
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       background: var(--green);
-      border-radius: 6px;
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
       color: white;
-      font-weight: 600;
-      font-size: 0.875rem;
+      font-weight: bold;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.75rem;
     }
 
     .btn {
@@ -203,78 +199,81 @@ const dateRange = `${formatMonth(threeMonthsAgo)} - ${formatMonth(now)}`;
       font-weight: 500;
       text-decoration: none;
       transition: all 0.15s;
-      border: 1px solid var(--gray-200);
+    }
+
+    .btn-outline {
+      border: 1px solid var(--gray-300);
       background: white;
       color: var(--gray-700);
     }
 
-    .btn:hover {
+    .btn-outline:hover {
       background: var(--gray-50);
-      border-color: var(--gray-300);
+      border-color: var(--gray-400);
+    }
+
+    .btn-primary {
+      background: var(--gray-900);
+      color: white;
+      border: 1px solid var(--gray-900);
+    }
+
+    .btn-primary:hover {
+      background: var(--gray-700);
     }
 
     /* Status Banner */
     .status-banner {
-      padding: 1rem 1.25rem;
-      border-radius: 8px;
-      margin-bottom: 1.5rem;
-      display: flex;
-      align-items: center;
-      gap: 0.875rem;
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
     }
 
     .status-banner.operational {
       background: var(--green-bg);
+      border: 1px solid var(--green-light);
     }
 
     .status-banner.degraded {
       background: var(--yellow-bg);
+      border: 1px solid var(--yellow-light);
     }
 
     .status-banner.down {
       background: var(--red-bg);
+      border: 1px solid var(--red-light);
     }
 
-    .status-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    .status-banner.operational .status-dot {
-      background: var(--green);
-    }
-
-    .status-banner.degraded .status-dot {
-      background: var(--yellow);
-    }
-
-    .status-banner.down .status-dot {
-      background: var(--red);
-    }
-
-    .status-text {
+    .status-banner-content {
       display: flex;
-      flex-direction: column;
-      gap: 0.125rem;
+      align-items: flex-start;
+      gap: 1rem;
     }
 
-    .status-text strong {
-      font-size: 0.9375rem;
+    .status-icon {
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+
+    .status-text h2 {
+      font-size: 1.125rem;
       font-weight: 600;
-      color: var(--gray-900);
+      margin-bottom: 0.25rem;
     }
 
-    .status-text span {
-      font-size: 0.8125rem;
-      color: var(--gray-500);
+    .status-banner.operational .status-text h2 { color: #047857; }
+    .status-banner.degraded .status-text h2 { color: #b45309; }
+    .status-banner.down .status-text h2 { color: #991b1b; }
+
+    .status-text p {
+      font-size: 0.875rem;
+      color: var(--gray-600);
     }
 
     /* Services Section */
     .services-section {
       background: white;
-      border-radius: 8px;
+      border-radius: 12px;
       border: 1px solid var(--gray-200);
       overflow: hidden;
     }
@@ -283,24 +282,39 @@ const dateRange = `${formatMonth(threeMonthsAgo)} - ${formatMonth(now)}`;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0.875rem 1.25rem;
-      border-bottom: 1px solid var(--gray-100);
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--gray-200);
     }
 
     .services-title {
-      font-size: 0.875rem;
+      font-size: 1rem;
       font-weight: 600;
       color: var(--gray-900);
     }
 
     .date-range {
-      font-size: 0.8125rem;
+      font-size: 0.875rem;
+      color: var(--gray-500);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .date-nav {
+      background: none;
+      border: none;
       color: var(--gray-400);
+      cursor: pointer;
+      padding: 0.25rem;
+    }
+
+    .date-nav:hover {
+      color: var(--gray-600);
     }
 
     /* Service Card */
     .service-card {
-      padding: 1rem 1.25rem;
+      padding: 1.25rem 1.5rem;
       border-bottom: 1px solid var(--gray-100);
     }
 
@@ -311,59 +325,42 @@ const dateRange = `${formatMonth(threeMonthsAgo)} - ${formatMonth(now)}`;
     .service-header {
       display: flex;
       align-items: center;
-      margin-bottom: 0.625rem;
+      margin-bottom: 0.75rem;
     }
 
-    .service-status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
+    .service-status-icon {
+      font-size: 1rem;
       margin-right: 0.75rem;
-      flex-shrink: 0;
-    }
-
-    .service-status-dot.up {
-      background: var(--green);
-    }
-
-    .service-status-dot.degraded {
-      background: var(--yellow);
-    }
-
-    .service-status-dot.down {
-      background: var(--red);
     }
 
     .service-name {
       font-weight: 500;
-      font-size: 0.875rem;
       color: var(--gray-900);
       flex: 1;
     }
 
     .service-uptime {
-      font-size: 0.8125rem;
-      color: var(--gray-400);
-      font-weight: 400;
+      font-size: 0.875rem;
+      color: var(--gray-500);
     }
 
     /* Uptime Bar */
     .uptime-bar {
       display: flex;
       gap: 2px;
-      height: 28px;
+      height: 32px;
     }
 
     .bar-segment {
       flex: 1;
-      border-radius: 2px;
+      border-radius: 3px;
       cursor: pointer;
-      transition: opacity 0.1s;
+      transition: transform 0.1s;
       position: relative;
     }
 
     .bar-segment:hover {
-      opacity: 0.8;
+      transform: scaleY(1.1);
     }
 
     .bar-segment.up {
@@ -391,12 +388,12 @@ const dateRange = `${formatMonth(threeMonthsAgo)} - ${formatMonth(now)}`;
       transform: translateX(-50%);
       background: var(--gray-900);
       color: white;
-      padding: 0.375rem 0.625rem;
-      border-radius: 4px;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
       font-size: 0.75rem;
       white-space: nowrap;
       z-index: 10;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
 
     .bar-segment:hover::before {
@@ -405,7 +402,7 @@ const dateRange = `${formatMonth(threeMonthsAgo)} - ${formatMonth(now)}`;
       bottom: 100%;
       left: 50%;
       transform: translateX(-50%);
-      border: 5px solid transparent;
+      border: 6px solid transparent;
       border-top-color: var(--gray-900);
       margin-bottom: -4px;
       z-index: 10;
@@ -414,22 +411,22 @@ const dateRange = `${formatMonth(threeMonthsAgo)} - ${formatMonth(now)}`;
     /* Footer */
     .footer {
       text-align: center;
-      padding: 1.5rem 1rem;
-      border-top: 1px solid var(--gray-100);
-      margin-top: auto;
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--gray-200);
     }
 
     .footer-link {
       display: inline-flex;
       align-items: center;
-      gap: 0.375rem;
-      color: var(--gray-400);
+      gap: 0.5rem;
+      color: var(--gray-500);
       text-decoration: none;
-      font-size: 0.8125rem;
+      font-size: 0.875rem;
     }
 
     .footer-link:hover {
-      color: var(--gray-600);
+      color: var(--gray-700);
     }
 
     /* Responsive */
@@ -444,10 +441,8 @@ const dateRange = `${formatMonth(threeMonthsAgo)} - ${formatMonth(now)}`;
         height: 24px;
       }
 
-      .services-header {
-        flex-direction: column;
-        gap: 0.5rem;
-        align-items: flex-start;
+      .bar-segment {
+        border-radius: 2px;
       }
     }
   </style>
@@ -460,31 +455,29 @@ const dateRange = `${formatMonth(threeMonthsAgo)} - ${formatMonth(now)}`;
         <div class="logo-icon">L</div>
         LernCampus24
       </a>
-      <a href="mailto:support@lerncampus24.de" class="btn">Störung melden</a>
+      <a href="mailto:support@lerncampus24.de" class="btn btn-outline">Störung melden</a>
     </header>
 
     <!-- Status Banner -->
     <div class={`status-banner ${overallStatus}`}>
-      <div class="status-dot"></div>
-      <div class="status-text">
-        {overallStatus === 'operational' && (
-          <>
-            <strong>Wir sind voll funktionsfähig</strong>
-            <span>Alle Systeme arbeiten normal.</span>
-          </>
-        )}
-        {overallStatus === 'degraded' && (
-          <>
-            <strong>Eingeschränkte Leistung</strong>
-            <span>Einige Dienste sind beeinträchtigt.</span>
-          </>
-        )}
-        {overallStatus === 'down' && (
-          <>
-            <strong>Dienst unterbrochen</strong>
-            <span>Wir arbeiten an einer Lösung.</span>
-          </>
-        )}
+      <div class="status-banner-content">
+        <span class="status-icon">
+          {overallStatus === 'operational' && '✅'}
+          {overallStatus === 'degraded' && '⚠️'}
+          {overallStatus === 'down' && '🔴'}
+        </span>
+        <div class="status-text">
+          <h2>
+            {overallStatus === 'operational' && 'Alle Systeme funktionieren einwandfrei'}
+            {overallStatus === 'degraded' && 'Eingeschränkte Leistung bei einigen Diensten'}
+            {overallStatus === 'down' && 'Störung bei einem oder mehreren Diensten'}
+          </h2>
+          <p>
+            {overallStatus === 'operational' && 'Wir haben keine bekannten Störungen.'}
+            {overallStatus === 'degraded' && 'Wir arbeiten an der Behebung.'}
+            {overallStatus === 'down' && 'Wir arbeiten mit Hochdruck an einer Lösung.'}
+          </p>
+        </div>
       </div>
     </div>
 
@@ -492,7 +485,9 @@ const dateRange = `${formatMonth(threeMonthsAgo)} - ${formatMonth(now)}`;
     <section class="services-section">
       <div class="services-header">
         <h3 class="services-title">Systemstatus</h3>
-        <span class="date-range">{dateRange}</span>
+        <div class="date-range">
+          <span>{dateRange}</span>
+        </div>
       </div>
 
       {uptimeData.map((service) => {
@@ -502,9 +497,13 @@ const dateRange = `${formatMonth(threeMonthsAgo)} - ${formatMonth(now)}`;
         return (
           <div class="service-card">
             <div class="service-header">
-              <div class={`service-status-dot ${service.status}`}></div>
+              <span class="service-status-icon">
+                {service.status === 'up' && '✅'}
+                {service.status === 'degraded' && '⚠️'}
+                {service.status === 'down' && '🔴'}
+              </span>
               <span class="service-name">{service.name}</span>
-              <span class="service-uptime">{uptimePercent}%</span>
+              <span class="service-uptime">{uptimePercent}% uptime</span>
             </div>
             <div class="uptime-bar">
               {bars.map((day) => (
@@ -518,13 +517,14 @@ const dateRange = `${formatMonth(threeMonthsAgo)} - ${formatMonth(now)}`;
         );
       })}
     </section>
-  </div>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <a href="https://github.com/upptime/upptime" target="_blank" rel="noopener" class="footer-link">
-      Powered by Upptime
-    </a>
-  </footer>
+    <!-- Footer -->
+    <footer class="footer">
+      <a href="https://lerncampus24.de" class="footer-link">
+        <span>Powered by</span>
+        <strong>LernCampus24</strong>
+      </a>
+    </footer>
+  </div>
 </body>
 </html>
