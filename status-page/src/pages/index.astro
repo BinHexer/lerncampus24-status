@@ -19,43 +19,14 @@ interface UptimeData {
   dailyMinutesDown: Record<string, number>;
 }
 
-const services = [
-  { name: 'API', slug: 'api' },
-  { name: 'Web App', slug: 'web-app' },
-  { name: 'Webseite', slug: 'webseite' },
-];
-
 let uptimeData: UptimeData[] = [];
 let overallStatus: 'operational' | 'degraded' | 'down' = 'operational';
 
 try {
-  uptimeData = await Promise.all(
-    services.map(async (service) => {
-      try {
-        const res = await fetch(`${REPO_URL}/api/${service.slug}/uptime.json`);
-        if (!res.ok) throw new Error('Not found');
-        return await res.json();
-      } catch {
-        // Return mock data if API not available yet
-        return {
-          name: service.name,
-          slug: service.slug,
-          status: 'up',
-          uptime: '100',
-          uptimeDay: '100',
-          uptimeWeek: '100',
-          uptimeMonth: '100',
-          uptimeYear: '100',
-          time: 0,
-          timeDay: 0,
-          timeWeek: 0,
-          timeMonth: 0,
-          timeYear: 0,
-          dailyMinutesDown: {},
-        };
-      }
-    })
-  );
+  // Fetch summary.json which contains all service data with status
+  const res = await fetch(`${REPO_URL}/history/summary.json`);
+  if (!res.ok) throw new Error('Failed to fetch summary');
+  uptimeData = await res.json();
 
   // Determine overall status
   if (uptimeData.some(s => s.status === 'down')) {
