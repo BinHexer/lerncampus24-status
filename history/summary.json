@@ -4,7 +4,7 @@
     "url": "https://api.lerncampus24.de/health",
     "icon": "https://icons.duckduckgo.com/ip3/api.lerncampus24.de.ico",
     "slug": "api",
-    "status": "up",
+    "status": "down",
     "uptime": "100.00%",
     "uptimeDay": "100.00%",
     "uptimeWeek": "100.00%",
@@ -31,7 +31,7 @@
     "time": 824,
     "timeDay": 563,
     "timeWeek": 823,
-    "timeMonth": 824,
+    "timeMonth": 822,
     "timeYear": 824,
     "dailyMinutesDown": {}
   },
